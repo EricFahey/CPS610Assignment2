@@ -186,6 +186,11 @@ public class Launcher {
         data.addAll(engineering.select("SELECT * FROM " + Tables.ENG_STUDENT.name() + " WHERE GPA >= 3.5"));
         prettyPrint(data);
 
+        System.out.println("----- ALL STUDENTS NOT ELIGIBLE FOR CO-OP -----");
+        data = science.select("SELECT * FROM " + Tables.SCI_STUDENT.name() + " WHERE GPA < 3.0");
+        data.addAll(engineering.select("SELECT * FROM " + Tables.ENG_STUDENT.name() + " WHERE GPA < 3.0"));
+        prettyPrint(data);
+
         System.out.println("----- ALL STUDENTS WHO ARE ENROLLED IN W2019 -----");
         data = science.select("select s.studentnumber, s.studentname, t.professorname, t.term, e.status " +
                 "from " + Tables.SCI_STUDENT.name() + " s join " + Tables.SCI_ENROLLED.name() + " e " +
