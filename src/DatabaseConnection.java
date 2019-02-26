@@ -1,4 +1,6 @@
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Eric Fahey <eric.fahey@ryerson.ca>
@@ -26,7 +28,7 @@ public class DatabaseConnection {
             String url = getURL();
             this.connection = DriverManager.getConnection(url);
             System.out.println("Successfully Created Connection to site " + getSite() + "!");
-            this.connection.setAutoCommit(false);
+//            this.connection.setAutoCommit(false);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -34,50 +36,83 @@ public class DatabaseConnection {
         return  false;
     }
 
-    public boolean isUnique(String name) {
+    public ArrayList<HashMap<String, String>> selectByConditions(Tables table, String conditions) {
+        String query = "SELECT * FROM " + table.name() + " WHERE " + conditions;
+        return select(query);
+    }
+
+    public ArrayList<HashMap<String, String>> selectByAttributes(Tables table, String attributes) {
+        String query = "SELECT " + attributes + " FROM " + table.name();
+        return select(query);
+    }
+
+    public ArrayList<HashMap<String, String>> select(String query) {
         try {
+            ArrayList<HashMap<String, String>> data = new ArrayList<>();
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT NAME FROM STUDENT");
-            boolean found = false;
+            ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
-                if (resultSet.getString("Name").equals(name)) {
-                    found = true;
+                HashMap<String, String> mapping = new HashMap<>();
+                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+                    int columnType = resultSet.getMetaData().getColumnType(i);
+                    String key = resultSet.getMetaData().getColumnName(i);
+                    if (columnType == Types.VARCHAR) {
+                        mapping.put(key, "'" + resultSet.getString(i) + "'");
+                    } else if (columnType == Types.FLOAT) {
+                        mapping.put(key, resultSet.getFloat(i) + "");
+                    } else if (columnType == Types.NUMERIC) {
+                        mapping.put(key, resultSet.getFloat(i) + "");
+                    } else {
+                        System.out.println("Unhandled Column Type: " + columnType);
+                    }
                 }
+                data.add(mapping);
 
             }
-            if (!found) {
-                System.out.println(name + " doesn't exist in site " + getSite() + "!");
-                return true;
-            }
+            return data;
         } catch (SQLException e) {
-            System.out.println("Unable to Query Student Table");
+            System.out.println("Unable to Query Table");
             e.printStackTrace();
         }
-        System.out.println(name + " already exists in site " + getSite() + "!");
-        return false;
+        return null;
     }
 
-    public boolean insertName(String name) {
+
+    public boolean insert(Tables table, String values) {
         try {
             Statement statement = connection.createStatement();
-            statement.executeQuery("INSERT INTO STUDENT VALUES('" + name + "')");
+            statement.executeQuery("INSERT INTO " + table.name() + " VALUES (" + values + ")");
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("Unable to Insert " + name + " to site " + getSite() + "!");
+        System.out.println("Insert into " + table.name() + " with values '" + values + "' failed on " + getSite() + "!");
         return false;
     }
 
-    public boolean deleteName(String name) {
+    public boolean insert(Tables table, String attributes, String values) {
+        String query = "INSERT INTO " + table.name() + " (" + attributes + ") VALUES (" + values + ")";
         try {
             Statement statement = connection.createStatement();
-            statement.executeQuery("DELETE FROM STUDENT WHERE NAME = '" + name + "'");
+            statement.executeQuery(query);
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("Unable to delete " + name + " from site " + getSite() + "!");
+//        System.out.println("Insert into " + table.name() + " with values '" + values + "' failed on " + getSite() + "!");
+        System.out.println(query + " Failed on site: " + getSite() + "!");
+        return false;
+    }
+
+    public boolean truncate(Tables table) {
+        try {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("DELETE FROM " + table.name() + " ");
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Unable to truncate " + table.name() + " from site " + getSite() + "!");
         return false;
     }
 
@@ -85,12 +120,12 @@ public class DatabaseConnection {
         return connection;
     }
 
-    public int getSite() {
+    public String getSite() {
         if (port == 1522)
-            return 1;
+            return "Central/Science";
         else if (port == 1523)
-            return 2;
-        return 0;
+            return "Engineering";
+        return "?";
     }
 
     public String getURL() {

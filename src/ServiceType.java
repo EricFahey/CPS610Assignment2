@@ -3,7 +3,8 @@
  */
 public enum ServiceType {
 
-    XE("xe");
+    XE("xe"),
+    SE("ORCLCDB");
 
     private final String sid;
 
