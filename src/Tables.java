@@ -5,7 +5,7 @@ public enum Tables {
 
     CENTRAL_STUDENT(new String[]{"studentNumber", "studentName", "degree", "gpa"}),
     CENTRAL_PROFESSOR(new String[]{"professorName", "engOffice", "engPhone", "sciOffice", "sciPhone"}),
-    CENTRAL_COURSE(new String[]{"courseNumber", "courseName", "credits"}),
+    CENTRAL_COURSE(new String[]{"courseNumber", "courseName", "credits", "capacity"}),
     CENTRAL_TEACHES(new String[]{"courseNumber", "professorName", "term"}),
     CENTRAL_ENROLLED(new String[]{"courseNumber", "professorName", "studentNumber", "status"}),
 
